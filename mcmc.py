@@ -3,17 +3,21 @@ import pdf2markov as p2m
 import random
 
 # load "true" Q and p of individual letters
-q, letter_p, text = p2m.load_file("MCMC/Pride and Prejudice (Classics Edition).pdf")
+q, letter_p, text = p2m.load_file("Pride and Prejudice (Classics Edition).pdf")
 
 # load scrambled
-scrambled_file = open("MCMC/j_29.txt", "r")
+file_prefix = 'h'
+scrambled_file = open(f"{file_prefix}_29.txt", "r")
 scrambled = scrambled_file.read()
 scrambled_file.close()
 
 
 # hyper parameters
-beta = 0.5
+beta = 0.7
 random_amount = 1  # what
+unchanged_for_convergence = 1000
+max_epochs = 20000
+
 permutation = list('abcdefghijklmnopqrstuvwxyz ')
 # 'ohfyazsplnqmdbexc kiwvjtugr' for f (feynman lectures on computation)
 # 'lnvtzmhawgosiujfxckqrbpdey ' for h (harry potter)
@@ -58,28 +62,42 @@ def new_perm():
     return p
 
 
-def run_mcmc(epochs):
+def run_mcmc(epochs=0):
     global permutation
     # loop
-    for i in range(epochs):
-        temp = new_perm()
-        e_temp = energy(temp)
-        e_perm = energy(permutation)
-        e_delta = e_temp - e_perm
-        if e_delta < 0 or random.uniform(0, 1) < math.exp((- beta) * e_delta):
-            permutation = temp
-            print(perm(permutation, 100))
-        else:
-            pass
-        # print(e_temp)
-        # print(e_perm)
-        # print(e_delta)
+    if epochs > 0:
+        for i in range(epochs):
+            temp = new_perm()
+            e_temp = energy(temp)
+            e_perm = energy(permutation)
+            e_delta = e_temp - e_perm
+            if e_delta < 0 or random.uniform(0, 1) < math.exp((- beta) * e_delta):
+                permutation = temp
+                print(perm(permutation, 100))
+            # print(e_temp)
+            # print(e_perm)
+            # print(e_delta)
+    else:
+        unchanged_counter = 0
+        for i in range(max_epochs):
+            temp = new_perm()
+            e_temp = energy(temp)
+            e_perm = energy(permutation)
+            e_delta = e_temp - e_perm
+            if e_delta < 0 or random.uniform(0, 1) < math.exp((- beta) * e_delta):
+                permutation = temp
+                print(perm(permutation, 100))
+                unchanged_counter = 0
+            else:
+                unchanged_counter += 1
+                if unchanged_counter >= unchanged_for_convergence:
+                    break
 
 
-# usually works after like 200 but just to be sure
-run_mcmc(3000)
+# usually works after like 2000 but just to be sure
+run_mcmc()
 print(permutation)
 print(perm(permutation))
-# bias it
-# consider move and decide whether to accept
-# loop
+
+with open(f'{file_prefix}_decoded.txt', 'w') as f:
+    f.write(perm(permutation))
