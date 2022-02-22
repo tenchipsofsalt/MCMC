@@ -6,7 +6,7 @@ import random
 q, letter_p, text = p2m.load_file("Pride and Prejudice (Classics Edition).pdf")
 
 # load scrambled
-file_prefix = 'h'
+file_prefix = 'j'
 scrambled_file = open(f"{file_prefix}_29.txt", "r")
 scrambled = scrambled_file.read()
 scrambled_file.close()
